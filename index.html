@@ -152,6 +152,9 @@
     .tag.buy { background: var(--buy-bg); color: var(--buy); }
     .tag.pack { background: var(--pack-bg); color: var(--pack); }
     .tag.car { background: #efe4c8; color: #7a5b16; }
+    .tag.hot { background: #fde8e6; color: var(--danger); }
+    .item.hot { background: #fff8f3; }
+    .chip.hot-chip.on { background: var(--danger); border-color: var(--danger); }
     .actions { display: flex; flex-direction: column; gap: 6px; }
     .mini {
       border: 1px solid var(--line); background: #fff; border-radius: 999px;
@@ -202,7 +205,7 @@
     </div>
 
     <div class="hint">
-      打勾顺序建议：先清掉「待采购」，再按随身 → 托运 → 车上装箱。蛇口海天 9/25 早上 8:00 前要办完值机托运。
+      先点上面的「重点」：那几件做错会废掉红杉、下羚羊谷或早班机。其余按待采购 → 随身 → 托运 → 车上打勾。
     </div>
 
     <div id="app"></div>
@@ -237,7 +240,29 @@ const GROUPS = [
       ["g-ua", "United App 已登录，PNR NNM3BZ", "carry", "buy"],
       ["g-power", "充电宝放随身，不要进托运", "carry", "pack"],
       ["g-apd", "问海天值机柜台香港机场税退税联", "carry", "buy"],
-      ["g-print", "入境材料纸质袋：护照+EVUS+机票+酒店+保险", "carry", "pack", "柜台可能抽查纸质件，别只靠手机"]
+      ["g-print", "入境材料纸质袋：护照+EVUS+机票+酒店+保险", "carry", "pack", "柜台可能抽查纸质件，别只靠手机", true],
+      ["g-id", "身份证（蛇口码头用）", "carry", "pack", "海天联运有时要核对身份，别只带护照"],
+      ["g-hk", "港澳通行证 + 赴港签注仍有效", "carry", "buy", "去程走海天不入香港境；回程 UA152 落到香港机场，回深圳必须过港入境", true],
+      ["g-liq", "随身液体已分装 ≤100ml，其余进托运", "carry", "buy"],
+      ["g-wh", "充电宝标注 <100Wh，放随身", "carry", "buy", "去程、10/4 西南航空、回程都不能托运锂电池", true],
+      ["g-food", "不带肉、水果、蛋、带肉馅零食", "carry", "buy", "SFO 海关查得紧。泡面有肉味也要申报，建议落地超市买早饭", true]
+    ]
+  },
+  {
+    key: "focus",
+    title: "这趟最容易翻车（先看）",
+    note: "不是再买一堆东西，是这几件事做错会直接废一天。结合你们 9/25–10/6 的路：海天→旧金山风→红杉夜→沙漠无信号→下羚羊谷禁包→10/4 早班机。",
+    items: [
+      ["p-antelope", "下羚羊谷穿长裤+包头鞋，裙子和所有包留车上", "carry", "buy", "铁梯、禁止背包/斜挎/腰包。部分团不让穿裙。白裙留给纪念碑谷日落，谷里先穿卡其裤", true],
+      ["p-phone", "谷里手机只靠挂绳或裤袋", "carry", "pack", "不能带任何包。证件包也留车上，护照贴身或锁进车里", true],
+      ["p-seq", "红杉当晚：头灯、羽绒、徒步鞋、帽子手套带身上", "checked", "buy", "Giant Forest 夜里可到 4–10°C。Moro Rock 日落后要摸黑下台阶，之后看星空", true],
+      ["p-horse", "马蹄湾日出约 6:22：头灯+羽绒，崖边不穿无安全裤的长裙", "checked", "buy", "纳瓦霍和佩吉时区容易搞错，出发前再对一次当地时间", true],
+      ["p-jeep", "纪念碑谷 Jeep：卡其长袖长裤+Buff，不穿白、不穿娇贵风衣", "checked", "pack", "红土洗不掉。结束后外层装密封袋再上车，别把土带上 10/3 那 6 小时", true],
+      ["p-wn", "10/4 西南航空 08:15：登机牌在 Southwest App，充电宝改随身", "carry", "buy", "不是美联航。拉斯维加斯机场早高峰，5:30 要起", true],
+      ["p-car", "10/3 还车前掏空后备箱、车门袋、遮阳板", "car", "buy", "支架、车充、头灯、脏衣服最容易忘在 Alamo", true],
+      ["p-smash", "旧金山/洛杉矶/拉斯维加斯：下车后座不留包", "car", "buy", "砸窗很常见。证件包随身，超市停车也一样", true],
+      ["p-data", "红杉、佩吉、纪念碑谷按完全没信号准备", "carry", "buy", "离线地图 + 住宿地址截图 + 能用的热点/eSIM。导航比微信更致命", true],
+      ["p-tz", "下羚羊谷确认单 PDF 已下载，护照原件随身", "carry", "buy", "迟到不改期。到场还要官方证件，不要只给手机截图", true]
     ]
   },
   {
@@ -247,26 +272,33 @@ const GROUPS = [
     items: [
       ["d-passport", "护照（有效期覆盖回国后 6 个月）", "carry", "pack"],
       ["d-visa", "美国签证页（在护照里，出发前再看一眼）", "carry", "pack"],
-      ["d-evus", "EVUS 登记确认打印件", "carry", "pack", "你已登记。打印放证件袋，不要只存在手机"],
+      ["d-evus", "EVUS 登记确认打印件", "carry", "pack", "你已登记。打印放证件袋，不要只存在手机", true],
       ["d-pass-copy", "护照个人信息页复印件 ×2", "carry", "buy"],
       ["d-visa-copy", "签证页复印件 ×1", "carry", "buy"],
       ["d-flight-out", "去程机票行程单 香港→旧金山", "carry", "pack"],
       ["d-flight-back", "回程机票行程单 洛杉矶→香港", "carry", "pack"],
       ["d-flight-las", "内陆机票行程单 拉斯维加斯→圣迭戈", "carry", "pack"],
-      ["d-hotel", "12 晚酒店 / Airbnb 预订单打印件", "carry", "pack"],
+      ["d-hotel", "12 晚酒店 / Airbnb 预订单打印件", "carry", "pack", "入境第一问：住哪。纸质比手机稳"],
       ["d-car", "Alamo 租车确认单复印件", "carry", "pack"],
       ["d-insure", "境外旅行保险保单打印件", "carry", "pack"],
       ["d-insure-pdf", "保险电子保单下载到手机（离线可开）", "carry", "pack"],
-      ["d-addr", "每晚住宿地址 + 电话截图（离线相册）", "carry", "buy"],
+      ["d-addr", "每晚住宿地址 + 电话截图（离线相册）", "carry", "buy", "红杉和纪念碑谷没信号，不能到了再打开订房邮件", true],
       ["d-pen", "笔", "carry", "pack"],
       ["d-pouch", "护照包 / 证件包", "carry", "pack"],
-      ["d-card1", "信用卡 1（Visa 或 Mastercard）", "carry", "pack"],
+      ["d-card1", "信用卡 1（Visa 或 Mastercard）", "carry", "pack", true],
       ["d-card2", "信用卡 2（另一卡组织）", "carry", "pack", "一张被风控时还能用；酒店和租车会刷授权"],
       ["d-cash-usd", "美元现金（大面额 $20 / $50）", "carry", "pack"],
-      ["d-ones", "$1 纸币 ×20", "carry", "buy", "小费、代客泊车、房间清洁。只带大钞不好用"],
-      ["d-fives", "$5 纸币 ×10", "carry", "buy"],
+      ["d-ones", "$1 纸币 ×20", "carry", "buy", "小费、行李员、房间清洁。只带大钞在美国不好用", true],
+      ["d-fives", "$5 纸币 ×10", "carry", "buy", true],
       ["d-cny", "少量人民币（深圳—香港段）", "carry", "pack"],
-      ["d-applepay", "Apple Pay 已开通、卡能刷", "carry", "done", "你已经开过"]
+      ["d-applepay", "Apple Pay 已开通、卡能刷", "carry", "done", "你已经开过"],
+      ["d-hkpermit", "港澳通行证 + 赴港签注（回程过香港入境）", "carry", "buy", "去程海天不入港境；10/7 落到香港要过境才能回深圳", true],
+      ["d-antelope", "下羚羊谷确认单 / 电子票离线", "carry", "buy", "10/2 已订。和护照一起，迟到不改期", true],
+      ["d-sw", "Southwest App 已登录，WN233 能出登机牌", "carry", "buy", "10/4 08:15 LAS→SAN，和 United 不是同一个 App", true],
+      ["d-amtrak", "10/5 圣迭戈→洛杉矶火车票 PDF 离线", "carry", "buy"],
+      ["d-airbnb", "Airbnb / 酒店开门密码、Wi‑Fi 截图离线", "carry", "buy"],
+      ["d-bank", "银行卡已报出境，确认能收短信验证码", "carry", "buy", "美国刷卡常要短信。没有漫游就开 Wi‑Fi calling 或改邮件验证", true],
+      ["d-ins-phone", "保险紧急电话截图", "carry", "pack", "美国急诊贵。你们医疗保额 5 万人民币偏薄，电话要随手能拨"]
     ]
   },
   {
@@ -280,14 +312,14 @@ const GROUPS = [
       ["f-ear", "耳塞 / 降噪耳机", "carry", "pack"],
       ["f-mask", "口罩 ×5", "carry", "pack"],
       ["f-wetmask", "湿口罩 ×3", "carry", "pack"],
-      ["f-comp", "小腿压力袜", "carry", "pack"],
+      ["f-comp", "小腿压力袜", "carry", "pack", "去程 12h、回程 13h，落地还要走路", true],
       ["f-foot", "脚部支撑垫", "carry", "pack"],
       ["f-slide", "一次性拖鞋（机上换）", "carry", "pack"],
-      ["f-snack", "小零食（坚果 / 饼干）", "carry", "pack"],
+      ["f-snack", "小零食（坚果 / 饼干，不要肉干）", "carry", "pack", "肉干、肉脯过海关会被扣"],
       ["f-bottle", "保温杯（空瓶过安检）", "carry", "pack"],
       ["f-wipe", "湿巾（随身小包）", "carry", "pack"],
       ["f-toilet", "湿厕纸（随身）", "carry", "pack"],
-      ["f-jacket", "上机外套（旧金山落地约 13°C、风大）", "carry", "pack"],
+      ["f-jacket", "上机外套（旧金山落地约 13°C、风大）", "carry", "pack", true],
       ["f-spare-u", "换洗内裤 ×1（行李延误保险）", "carry", "pack"],
       ["f-spare-t", "薄上衣 ×1（行李延误保险）", "carry", "pack"]
     ]
@@ -301,21 +333,22 @@ const GROUPS = [
       ["w-white-shirt", "白衬衫", "checked", "pack"],
       ["w-tee", "透气短袖 / T 恤 ×2", "checked", "pack", "D6 拉斯维加斯白天 32°C"],
       ["w-turtleneck", "白色高领或薄毛衣", "checked", "pack", "D3 红杉，林下阴冷"],
-      ["w-khaki-top", "卡其或驼色长袖", "checked", "pack", "D9 Jeep：浅色娇贵布料会脏到洗不掉"],
+      ["w-khaki-top", "卡其或驼色长袖", "checked", "pack", "D8 纪念碑谷 Jeep：浅色娇贵布料会脏到洗不掉", true],
       ["w-hoodie", "卫衣或针织套装上衣", "checked", "pack"],
       ["w-cami", "白色或浅色吊带", "checked", "pack"],
       ["w-jean", "直筒牛仔裤", "checked", "pack"],
       ["w-dark-pant", "深色长裤", "checked", "pack", "D3 红杉"],
       ["w-wide", "阔腿裤（透气）", "checked", "pack", "D6 白天最热"],
-      ["w-khaki-pant", "卡其长裤", "checked", "pack", "D9 Jeep"],
+      ["w-khaki-pant", "卡其长裤", "checked", "pack", "D8 下羚羊谷 + Jeep。谷里穿这个，不要穿裙", true],
       ["w-leggings", "弹力裤", "checked", "pack"],
-      ["w-white-dress", "白 / 米白飘逸长裙（下摆有分量）", "checked", "buy", "D2 一号公路、D8 下羚羊谷、D11 La Jolla。太轻会被吹翻"],
-      ["w-red-dress", "正红连衣裙或正红长裙", "checked", "buy", "D8 纪念碑谷日落、D10 Balboa"],
+      ["w-white-dress", "白 / 米白飘逸长裙（下摆有分量）", "checked", "buy", "只给 D2 一号公路、D11 La Jolla。下羚羊谷不要穿，铁梯+部分团禁裙"],
+      ["w-red-dress", "正红连衣裙或正红长裙", "checked", "buy", "D8 纪念碑谷日落（谷里换完再穿）、D10 Balboa"],
       ["w-blue-dress", "宝蓝连衣裙", "checked", "pack", "没有就用正红顶上"],
       ["w-sm-dress", "浅色短袖连衣裙", "checked", "pack", "D4 圣莫妮卡日落"],
       ["w-vegas-dress", "缎面或亮片连衣裙 / 小黑裙", "checked", "buy", "只在 D6 拉斯维加斯夜里用一次"],
       ["w-beverly", "合身连衣裙或西装套装", "checked", "pack", "D5 比弗利。华纳 tour 不要穿这套"],
-      ["w-safety", "防走光安全裤 ×3", "checked", "buy", "D2 悬崖、D8 马蹄湾崖边"],
+      ["w-safety", "防走光安全裤 ×3", "checked", "buy", "D2 悬崖、D8 马蹄湾崖边。大风穿长裙的必需", true],
+      ["w-sleeve", "防晒袖 / 开车冰袖", "checked", "buy", "一号公路和沙漠车程手臂会晒伤，比再带一件薄外套更有用"],
       ["w-swim", "泳衣", "checked", "pack", "十月初水凉，不下水就选不带"]
     ]
   },
@@ -324,16 +357,16 @@ const GROUPS = [
     title: "衣服 · 外套与保暖层",
     note: "全程 4–32°C，靠分层。",
     items: [
-      ["l-wind", "海军蓝或米白长风衣", "checked", "pack", "D1 旧金山、D2 一号公路风极大"],
-      ["l-down", "亮色长款轻羽绒（正红或米白）", "checked", "buy", "D3 红杉夜 4°C、D8 马蹄湾日出 7°C"],
-      ["l-base", "保暖打底 ×2", "checked", "buy", "红杉看星空必穿"],
+      ["l-wind", "海军蓝或米白长风衣", "checked", "pack", "D1 旧金山、D2 一号公路风极大。Jeep 那天不要穿这件", true],
+      ["l-down", "亮色长款轻羽绒（正红或米白）", "checked", "buy", "D3 红杉夜 4°C、D8 马蹄湾日出 7°C。这件比再买冲锋衣更值得", true],
+      ["l-base", "保暖打底 ×2", "checked", "buy", "红杉看星空必穿", true],
       ["l-denim", "牛仔外套", "checked", "pack"],
       ["l-cardigan", "针织开衫", "checked", "pack"],
       ["l-wrap", "薄外搭（披肩式或小西装）", "checked", "pack", "D6 赌场内空调很冷"],
-      ["l-shawl", "米白或驼色大披肩", "checked", "buy", "D9 Jeep 防尘 + 拍照"],
+      ["l-shawl", "米白或驼色大披肩", "checked", "buy", "拍照用。Jeep 防尘请用 Buff，别用这件"],
       ["l-scarf", "大围巾（可当机舱毯子）", "carry", "pack"],
-      ["l-beanie", "毛线帽", "checked", "buy", "红杉看星空、马蹄湾等日出"],
-      ["l-glove", "薄手套", "checked", "buy", "4°C 户外端相机会僵"]
+      ["l-beanie", "毛线帽", "checked", "buy", "红杉看星空、马蹄湾等日出", true],
+      ["l-glove", "薄手套", "checked", "buy", "4°C 户外端相机会僵", true]
     ]
   },
   {
@@ -344,6 +377,7 @@ const GROUPS = [
       ["u-brief", "内裤 ×12", "checked", "pack"],
       ["u-bra", "内衣 ×5", "checked", "pack"],
       ["u-sock-crew", "中筒袜 ×6（徒步、红杉、沙漠）", "checked", "pack"],
+      ["u-hike-sock", "美利奴 / 速干徒步袜 ×3", "checked", "buy", "棉袜在 Moro Rock 台阶和沙地容易磨出水泡", true],
       ["u-sock-no", "船袜 / 隐形袜 ×6", "checked", "pack"],
       ["u-pj-top", "睡衣上衣 ×2", "checked", "pack"],
       ["u-pj-bot", "睡衣裤 ×2", "checked", "pack"]
@@ -354,25 +388,25 @@ const GROUPS = [
     title: "鞋、帽、包、配饰",
     note: "正经鞋 3 双就够。新鞋现在开始穿开。",
     items: [
-      ["s-sneaker", "白色运动鞋（已穿开）", "checked", "buy", "下羚羊谷强制包头防滑；Vegas 夜里走 8–10 km"],
-      ["s-hike", "徒步鞋（防滑、包脚）", "checked", "buy", "Moro Rock 台阶、Congress Trail、马蹄湾沙地"],
+      ["s-sneaker", "白色运动鞋（已穿开）", "checked", "buy", "下羚羊谷强制包头防滑；Vegas 夜里走 8–10 km。现在开始穿开，出发只剩 4 天", true],
+      ["s-hike", "徒步鞋（防滑、包脚）", "checked", "buy", "Moro Rock 台阶、Congress Trail、马蹄湾沙地。凉鞋高跟鞋都不能下谷", true],
       ["s-dress", "粗跟短靴 / 乐福鞋 / 平底", "checked", "pack", "D5 比弗利、D10 Balboa"],
-      ["s-sandal", "平底凉鞋", "checked", "pack", "下羚羊谷不能穿"],
+      ["s-sandal", "平底凉鞋", "checked", "pack", "只给沙滩。下羚羊谷、华纳 tour、红杉都不能穿"],
       ["s-slip", "拖鞋（美国酒店常常不提供）", "checked", "pack"],
-      ["s-hat-chin", "遮阳帽（必须有下巴系绳）", "checked", "buy", "马蹄湾和纪念碑谷普通帽子会被吹走"],
+      ["s-hat-chin", "遮阳帽（必须有下巴系绳）", "checked", "buy", "马蹄湾和纪念碑谷普通帽子会被吹走", true],
       ["s-straw", "草帽", "checked", "pack"],
-      ["s-sun", "墨镜", "carry", "buy", "沙漠 4 天 + 海边 3 天"],
-      ["s-buff", "魔术头巾 / Buff", "checked", "buy", "D9 Jeep 2.5 小时敞篷扬尘"],
+      ["s-sun", "墨镜", "carry", "buy", "沙漠 4 天 + 海边 3 天，UV 比国内强很多", true],
+      ["s-buff", "魔术头巾 / Buff", "checked", "buy", "D8 Jeep 2.5 小时敞篷扬尘，一次性口罩在风里没用", true],
       ["s-silk", "丝巾", "checked", "pack"],
       ["s-gold", "金饰小包", "carry", "pack"],
       ["s-silver", "银饰 + 绿松石耳环", "carry", "buy", "D7–D9 沙漠段比金饰更搭"],
       ["s-stud", "耳钉（最小的一副，徒步戴）", "carry", "pack"],
-      ["s-cross", "出门斜挎包（贴身）", "carry", "pack"],
+      ["s-cross", "出门斜挎包（贴身）", "carry", "pack", "城市用。下羚羊谷不能带进去"],
       ["s-day", "双肩小包（徒步日）", "checked", "pack"],
       ["s-tote", "帆布包 / 折叠购物袋", "checked", "pack"],
       ["s-fold", "折叠行李袋", "checked", "pack"],
-      ["s-waist", "防盗腰包", "carry", "pack", "D6 Fremont Street、洛杉矶"],
-      ["s-lanyard", "手机挂绳", "carry", "pack"]
+      ["s-waist", "防盗腰包", "carry", "pack", "D6 Fremont Street、洛杉矶。谷里同样禁止"],
+      ["s-lanyard", "手机挂绳", "carry", "pack", "下羚羊谷唯一能带手机的方式", true]
     ]
   },
   {
@@ -399,7 +433,9 @@ const GROUPS = [
       ["h-spray", "定型喷雾 / 发胶 ≤100ml", "carry", "buy", "12 天里有 8 天大风"],
       ["h-towel", "速干浴巾", "checked", "pack"],
       ["h-nail", "指甲剪（不能随身）", "checked", "pack"],
-      ["h-tweeze", "镊子", "checked", "pack"]
+      ["h-tweeze", "镊子", "checked", "pack"],
+      ["h-sanitizer", "免洗手消毒液 ≤100ml", "carry", "buy", "国家公园厕所常常没有皂液"],
+      ["h-tp", "小包手纸 / 压缩纸巾", "carry", "buy", "红杉、马蹄湾、纪念碑谷公厕会断纸", true]
     ]
   },
   {
@@ -413,11 +449,12 @@ const GROUPS = [
       ["k-cream", "面霜（含旅行小样 ×1 随身）", "checked", "pack"],
       ["k-mask", "面膜 ×5", "checked", "pack"],
       ["k-mist", "保湿喷雾小瓶", "carry", "pack"],
-      ["k-lip", "润唇膏", "carry", "buy", "沙漠段嘴唇开裂最常见"],
-      ["k-lipspf", "防晒唇膏", "carry", "buy"],
+      ["k-lip", "润唇膏", "carry", "buy", "沙漠段嘴唇开裂最常见", true],
+      ["k-lipspf", "防晒唇膏", "carry", "buy", true],
       ["k-hand", "护手霜", "carry", "buy"],
       ["k-bodylotion", "身体乳", "checked", "buy", "拉斯维加斯到纪念碑谷连续 4 天极干"],
-      ["k-spf-face", "面部防晒霜", "checked", "pack"],
+      ["k-spf-face", "面部防晒霜 SPF50+", "checked", "pack", "沙漠 UV 很强，早上涂完中午还要补", true],
+      ["k-spf-mini", "防晒小样 / 防晒棒（随身补涂）", "carry", "buy", "马蹄湾和一号公路没法回车上补"],
       ["k-spf-body", "身体防晒霜", "checked", "pack"],
       ["k-aftersun", "晒后修复 / 芦荟胶", "checked", "buy"],
       ["k-found", "粉底", "checked", "pack"],
@@ -431,7 +468,8 @@ const GROUPS = [
       ["k-case", "隐形盒", "checked", "pack"],
       ["k-sol", "护理液", "checked", "pack"],
       ["k-eyedrop", "眼药水", "carry", "pack"],
-      ["k-glasses", "框架眼镜", "carry", "buy", "D8 羚羊谷、D9 Jeep 沙尘建议改戴框架"]
+      ["k-nose", "生理盐水喷鼻", "carry", "buy", "飞机 + 沙漠鼻腔开裂很常见，比再带面膜有用", true],
+      ["k-glasses", "框架眼镜", "carry", "buy", "D8 羚羊谷、Jeep 沙尘建议改戴框架，隐形会糊", true]
     ]
   },
   {
@@ -444,13 +482,15 @@ const GROUPS = [
       ["m-ibu", "布洛芬 / 止痛药", "carry", "pack"],
       ["m-cold", "感冒药（小份）", "carry", "pack"],
       ["m-stomach", "肠胃药（消化、止泻）", "carry", "pack"],
-      ["m-motion", "晕车贴 / 晕车药", "carry", "pack", "山路自驾 + Jeep"],
+      ["m-motion", "晕车贴 / 晕车药", "carry", "pack", "红杉 Generals Highway 山路 + Jeep", true],
       ["m-band", "创可贴", "carry", "pack"],
-      ["m-blister", "防磨脚贴", "carry", "pack"],
+      ["m-blister", "防磨脚贴", "carry", "pack", "新鞋 + Moro Rock 350 级台阶", true],
       ["m-alcohol", "酒精棉签", "checked", "pack"],
-      ["m-electro", "电解质泡腾片", "checked", "buy", "沙漠脱水比中暑更常见"],
+      ["m-electro", "电解质泡腾片", "checked", "buy", "沙漠脱水比中暑更常见，水要配这个喝", true],
+      ["m-allergy", "抗过敏药 / 抗组胺", "carry", "buy", "Jeep 扬尘、干燥空气容易过敏"],
+      ["m-throat", "润喉糖 / 含片", "carry", "pack", "机舱和沙漠都干"],
       ["m-rx", "处方药（如有）+ 原包装", "carry", "pack"],
-      ["m-pad", "卫生巾 / 卫生棉条（按周期多备）", "checked", "pack"]
+      ["m-pad", "卫生巾 / 卫生棉条（按周期多备）", "checked", "pack", "美国药店贵且不一定有你惯用的"]
     ]
   },
   {
@@ -461,12 +501,14 @@ const GROUPS = [
       ["t-phone", "手机", "carry", "pack"],
       ["t-cable", "手机充电线 ×2", "carry", "pack"],
       ["t-brick", "充电头 / 快充头", "carry", "pack"],
-      ["t-bank", "充电宝", "carry", "pack", "托运会被开箱取出"],
+      ["t-bank", "充电宝", "carry", "pack", "托运会被开箱取出。去程、10/4、回程三次都要在随身", true],
       ["t-us", "美标转换插头（Type A/B）", "carry", "skip", "陈坛辉会带。你想自己有一份就改回待装箱"],
       ["t-watch", "手表及充电线（如戴）", "carry", "pack"],
       ["t-pods", "耳机", "carry", "pack"],
-      ["t-clipper", "Clipper App 已安装并绑卡", "carry", "buy", "叮叮车日票落地再买"],
-      ["t-map", "离线地图：旧金山、红杉、佩吉、纪念碑谷、洛杉矶、圣迭戈", "carry", "buy"],
+      ["t-clipper", "Clipper App 已安装并绑卡", "carry", "buy", "D1 叮叮车日票落地再买。旧金山不要排 Powell 大长队", true],
+      ["t-map", "离线地图：旧金山、红杉、佩吉、纪念碑谷、洛杉矶、圣迭戈", "carry", "buy", "红杉和纪念碑谷大片没信号", true],
+      ["t-hotspot", "确认能用陈坛辉美国卡热点，或自己办 eSIM", "carry", "buy", "你没有单独的美国电话卡。公园里没热点就等于没导航", true],
+      ["t-usba", "USB-A 充电线（租车点烟器口常用）", "car", "buy", "很多美租车还是 USB-A，只有 C to C 会插不上"],
       ["t-airtag", "Airtag（放托运箱）", "checked", "pack"],
       ["t-lock", "TSA 海关锁", "checked", "pack"],
       ["t-zip", "拉链八字锁扣", "checked", "pack"]
@@ -487,25 +529,26 @@ const GROUPS = [
       ["x-lbag", "脏衣袋", "checked", "pack"],
       ["x-compress", "压缩袋", "checked", "buy", "羽绒和裙子压下去能省一层箱子"],
       ["x-stain", "去渍笔", "checked", "buy"],
-      ["x-n95", "N95 ×3（Jeep 那天）", "checked", "pack"],
+      ["x-n95", "N95 ×3（D8 Jeep 那天）", "checked", "pack", "敞篷扬尘，口罩比 Buff 更严实，两件都带"],
       ["x-instant", "即食麦片 / 小面包（酒店没早饭那天）", "carry", "buy"],
-      ["x-noodle", "泡面 2–3 包（备用，不是主食）", "checked", "buy"]
+      ["x-noodle", "泡面 2–3 包（备用，不是主食）", "checked", "buy", "有肉味要向海关申报。更稳妥是落地 Target 买麦片"],
+      ["x-bottle1l", "1L 运动水壶", "car", "buy", "沙漠徒步保温杯不够大。落地超市买也行", true]
     ]
   },
   {
     key: "car",
     title: "车上常备（9/25 取车 – 10/3 还车）",
-    note: "放后备箱，下车即取。10/3 还车前全部掏出来。",
+    note: "放后备箱，下车即取。10/3 还车前全部掏出来。旧金山/洛杉矶/拉斯维加斯后座不留包。",
     items: [
-      ["v-mount", "车载手机支架", "car", "buy", "8 地方自驾、单日最长约 6 小时"],
-      ["v-carcharge", "多口车充 + 线（有的租车只有点烟器）", "car", "buy"],
+      ["v-mount", "车载手机支架", "car", "buy", "8 天自驾、单日最长约 6 小时。租车不一定有好用的 CarPlay", true],
+      ["v-carcharge", "多口车充 + 线（有的租车只有点烟器）", "car", "buy", true],
       ["v-visor", "车遮阳帘", "car", "buy", "美西白天路晒，后排和挡风玻璃都有用"],
-      ["v-lamp", "头灯（含电池或已充电）", "car", "buy", "Moro Rock 摸黑下台阶、马蹄湾 6:22 日出"],
+      ["v-lamp", "头灯（含电池或已充电）", "car", "buy", "Moro Rock 摸黑下台阶、马蹄湾 6:22 日出。这件不能忘", true],
       ["v-flash", "手电（备用）", "car", "buy"],
       ["v-blanket", "薄毯", "car", "pack", "看星空、等日出都要在低温里久坐"],
-      ["v-change", "车上换装袋", "car", "pack", "D4 单日从 6°C 到 28°C"],
-      ["v-water", "大瓶水（落地超市买）", "car", "buy"],
-      ["v-snack", "车上零食（落地超市买）", "car", "buy"],
+      ["v-change", "车上换装袋", "car", "pack", "D4 单日从 6°C 到 28°C；D8 谷里长裤、日落再换裙"],
+      ["v-water", "大瓶水（落地超市买）", "car", "buy", "红杉和纪念碑谷园内补给少且贵", true],
+      ["v-snack", "车上零食（落地超市买，不要肉干入境）", "car", "buy"],
       ["v-trash", "车用垃圾袋", "car", "buy"],
       ["v-wipe", "车用湿巾", "car", "buy"]
     ]
@@ -524,7 +567,7 @@ function load() {
 function save(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
 
 let store = load();
-let filter = "open";
+let filter = "hot";
 let bag = "all";
 let query = "";
 
@@ -534,6 +577,7 @@ const app = document.getElementById("app");
 
 function chips() {
   const fs = [
+    ["hot", "重点"],
     ["open", "未完成"],
     ["buy", "待采购"],
     ["all", "全部"],
@@ -541,19 +585,31 @@ function chips() {
     ["skip", "不带"]
   ];
   filtersEl.innerHTML = fs.map(([k, l]) =>
-    `<button class="chip ${filter===k?"on":""}" data-f="${k}">${l}</button>`
+    `<button class="chip ${k==="hot"?"hot-chip":""} ${filter===k?"on":""}" data-f="${k}">${l}</button>`
   ).join("");
   bagsEl.innerHTML = [["all","全部位置"],["carry","随身"],["checked","托运"],["car","车上"]]
     .map(([k,l]) => `<button class="bag ${bag===k?"on":""}" data-b="${k}">${l}</button>`).join("");
 }
 
+function parseItem(it, group) {
+  const hotFlag = it[4] === true || it[5] === true;
+  const why = (typeof it[4] === "string") ? it[4] : "";
+  return {
+    id: it[0],
+    name: it[1],
+    bag: it[2],
+    init: it[3],
+    why,
+    hot: hotFlag,
+    group,
+  };
+}
+
 function allItems() {
   const extra = Object.entries(store).filter(([id, v]) => v.custom).map(([id, v]) => ({
-    id, name: v.name, bag: v.bag, init: "pack", why: "", group: "custom"
+    id, name: v.name, bag: v.bag, init: "pack", why: "", hot: false, group: "custom"
   }));
-  const base = GROUPS.flatMap((g) => g.items.map((it) => ({
-    id: it[0], name: it[1], bag: it[2], init: it[3], why: it[4] || "", group: g.key
-  })));
+  const base = GROUPS.flatMap((g) => g.items.map((it) => parseItem(it, g.key)));
   return base.concat(extra);
 }
 
@@ -563,6 +619,7 @@ function visible(item) {
   if (query && !item.name.toLowerCase().includes(query) && !(item.why||"").toLowerCase().includes(query)) return false;
   if (filter === "all") return true;
   if (filter === "open") return st === "buy" || st === "pack";
+  if (filter === "hot") return item.hot && st !== "skip";
   return st === filter;
 }
 
@@ -604,9 +661,7 @@ function render() {
   const groups = GROUPS.concat(customGroup.items.length ? [customGroup] : []);
 
   app.innerHTML = groups.map((g) => {
-    const mapped = g.items.map((it) => ({
-      id: it[0], name: it[1], bag: it[2], init: it[3], why: it[4] || "", group: g.key
-    })).filter(visible);
+    const mapped = g.items.map((it) => parseItem(it, g.key)).filter(visible);
     if (!mapped.length) return "";
     const done = mapped.filter((it) => ((store[it.id]||{}).state || it.init) === "done").length;
     return `<section class="group">
@@ -620,12 +675,13 @@ function render() {
       <div class="items" id="g-${g.key}">
         ${mapped.map((it) => {
           const st = (store[it.id] || {}).state || it.init;
-          return `<div class="item ${st}" data-done="${it.id}">
+          return `<div class="item ${st}${it.hot ? " hot" : ""}" data-done="${it.id}">
             <div class="check">${st==="done"?"✓":""}</div>
             <div>
               <div class="name">${it.name}</div>
               ${it.why ? `<div class="why">${it.why}</div>` : ""}
               <div class="tags">
+                ${it.hot ? `<span class="tag hot">重点</span>` : ""}
                 <span class="tag ${it.bag==="car"?"car":""}">${BAG[it.bag]}</span>
                 <span class="tag ${st}">${STATE[st]}</span>
               </div>
