@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1f2a24" />
+  <title>崔艺潆 · 美西行李清单</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --bg-2: #ebe3d4;
+      --paper: #fffaf2;
+      --ink: #1f2a24;
+      --muted: #6b6458;
+      --line: #e0d6c6;
+      --buy: #c45c26;
+      --buy-bg: #fbe8d8;
+      --pack: #3d6b4f;
+      --pack-bg: #e4efe6;
+      --done: #8a8478;
+      --skip: #9a9084;
+      --danger: #9b2c2c;
+      --shadow: 0 10px 30px rgba(31, 42, 36, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    html { scroll-padding-top: 150px; }
+    body {
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #f8e7c9 0%, transparent 50%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 120px; }
+    header.hero {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px 20px 18px;
+      box-shadow: var(--shadow);
+    }
+    .kicker { font-size: 12px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+    h1 { font-size: 28px; margin: 6px 0 8px; letter-spacing: -0.03em; }
+    .sub { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+    @media (min-width: 640px) {
+      .stats { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      background: var(--bg);
+      border-radius: 14px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .stat b { display: block; font-size: 22px; line-height: 1.2; }
+    .stat span { font-size: 11px; color: var(--muted); }
+    .bar { height: 8px; background: var(--bg-2); border-radius: 99px; margin-top: 14px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #3d6b4f, #c9a227); transition: width .25s ease; }
+    .toolbar {
+      position: sticky; top: 0; z-index: 8;
+      background: rgba(244, 239, 230, 0.96);
+      backdrop-filter: blur(12px);
+      margin: 14px -16px 0;
+      padding: 10px 16px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .filters, .bags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+    .chip, .bag {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 13px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .chip.on, .bag.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 16px;
+      margin-top: 4px;
+    }
+    .hint {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #f7ead4;
+      color: #5b4630;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .group {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      margin-top: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .group-h {
+      width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 16px 12px;
+      background: transparent; border: 0; text-align: left; cursor: pointer;
+    }
+    .group-h h2 { margin: 0; font-size: 18px; }
+    .group-h small { color: var(--muted); display: block; margin-top: 4px; font-size: 12px; line-height: 1.45; }
+    .count { font-size: 12px; color: var(--muted); }
+    .items { padding: 0 10px 10px; }
+    .item {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 14px 8px;
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 150px;
+      cursor: pointer;
+    }
+    .item:active { background: #f7f1e6; }
+    .item.done .name { color: var(--done); text-decoration: line-through; }
+    .item.skip { opacity: .55; }
+    .check {
+      width: 28px; height: 28px; margin-top: 1px;
+      border-radius: 9px; border: 1.5px solid #b7b0a4;
+      background: #fff; cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 16px; pointer-events: none;
+    }
+    .item.done .check { background: #3d6b4f; border-color: #3d6b4f; color: #fff; }
+    .name { font-size: 15px; font-weight: 560; }
+    .why { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      font-size: 11px; border-radius: 999px; padding: 3px 8px;
+      background: var(--bg-2); color: var(--muted);
+    }
+    .tag.buy { background: var(--buy-bg); color: var(--buy); }
+    .tag.pack { background: var(--pack-bg); color: var(--pack); }
+    .tag.car { background: #efe4c8; color: #7a5b16; }
+    .actions { display: flex; flex-direction: column; gap: 6px; }
+    .mini {
+      border: 1px solid var(--line); background: #fff; border-radius: 999px;
+      font-size: 11px; padding: 4px 8px; cursor: pointer; color: var(--muted);
+    }
+    .mini.on-buy { background: var(--buy-bg); color: var(--buy); border-color: #efc7a8; }
+    .mini.on-skip { background: #eee; color: #666; }
+    .add {
+      margin-top: 16px;
+      display: flex; gap: 8px;
+    }
+    .add input, .add select {
+      border: 1px solid var(--line); background: var(--paper); border-radius: 12px;
+      padding: 11px 12px; font-size: 15px;
+    }
+    .add input { flex: 1; }
+    .add button, .reset {
+      border: 0; background: var(--ink); color: #fff; border-radius: 12px;
+      padding: 11px 14px; cursor: pointer;
+    }
+    .reset { background: transparent; color: var(--muted); border: 1px solid var(--line); margin-top: 10px; }
+    .footer-note { color: var(--muted); font-size: 12px; margin-top: 16px; line-height: 1.5; }
+    @media (max-width: 520px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="kicker">US West · 9/25–10/6 · 只列你的东西</div>
+      <h1>行李清单</h1>
+      <p class="sub">点左边方框打勾。还没买的先标「待采购」，确定不带就点「不带」。进度存在这台手机/电脑里，关掉也不会丢。</p>
+      <div class="stats">
+        <div class="stat"><b id="nAll">0</b><span>全部</span></div>
+        <div class="stat"><b id="nBuy">0</b><span>待采购</span></div>
+        <div class="stat"><b id="nOpen">0</b><span>未完成</span></div>
+        <div class="stat"><b id="nDone">0</b><span>已打勾</span></div>
+      </div>
+      <div class="bar"><i id="bar"></i></div>
+    </header>
+
+    <div class="toolbar">
+      <div class="filters" id="filters"></div>
+      <div class="bags" id="bags"></div>
+      <input class="search" id="q" placeholder="搜：护照、羽绒、电解质…" />
+    </div>
+
+    <div class="hint">
+      打勾顺序建议：先清掉「待采购」，再按随身 → 托运 → 车上装箱。蛇口海天 9/25 早上 8:00 前要办完值机托运。
+    </div>
+
+    <div id="app"></div>
+
+    <div class="add">
+      <input id="newName" placeholder="自己加一项，例如：压缩袋" />
+      <select id="newBag">
+        <option value="carry">随身</option>
+        <option value="checked">托运</option>
+        <option value="car">车上</option>
+      </select>
+      <button id="addBtn">加上</button>
+    </div>
+    <button class="reset" id="resetBtn">清空勾选，恢复默认清单</button>
+    <p class="footer-note">默认只列崔艺潆自己要带/要买的。相机、转换插头、大药包、美国电话卡按你们之前的分工，不出现在这里。</p>
+  </div>
+
+<script>
+const KEY = "cyy-us-trip-packing-v1";
+const STATE = { buy: "待采购", pack: "待装箱", done: "已装箱", skip: "不带" };
+const BAG = { carry: "随身", checked: "托运", car: "车上" };
+
+const GROUPS = [
+  {
+    key: "go",
+    title: "出发当天 · 蛇口海天",
+    note: "9/25 建议 07:15 到码头。8:00 前办完值机和托运，8:15 登船。",
+    items: [
+      ["g-code", "cmskchp 乘船码已下载/截图离线", "carry", "buy", "现场信号不好时也能出示"],
+      ["g-arrive", "07:15 前到蛇口邮轮中心", "carry", "buy"],
+      ["g-weigh", "托运行李已称重（合计别超）", "checked", "buy"],
+      ["g-ua", "United App 已登录，PNR NNM3BZ", "carry", "buy"],
+      ["g-power", "充电宝放随身，不要进托运", "carry", "pack"],
+      ["g-apd", "问海天值机柜台香港机场税退税联", "carry", "buy"],
+      ["g-print", "入境材料纸质袋：护照+EVUS+机票+酒店+保险", "carry", "pack", "柜台可能抽查纸质件，别只靠手机"]
+    ]
+  },
+  {
+    key: "docs",
+    title: "证件、钱、打印件",
+    note: "全部随身。入境柜台要 10 秒内掏出来。",
+    items: [
+      ["d-passport", "护照（有效期覆盖回国后 6 个月）", "carry", "pack"],
+      ["d-visa", "美国签证页（在护照里，出发前再看一眼）", "carry", "pack"],
+      ["d-evus", "EVUS 登记确认打印件", "carry", "pack", "你已登记。打印放证件袋，不要只存在手机"],
+      ["d-pass-copy", "护照个人信息页复印件 ×2", "carry", "buy"],
+      ["d-visa-copy", "签证页复印件 ×1", "carry", "buy"],
+      ["d-flight-out", "去程机票行程单 香港→旧金山", "carry", "pack"],
+      ["d-flight-back", "回程机票行程单 洛杉矶→香港", "carry", "pack"],
+      ["d-flight-las", "内陆机票行程单 拉斯维加斯→圣迭戈", "carry", "pack"],
+      ["d-hotel", "12 晚酒店 / Airbnb 预订单打印件", "carry", "pack"],
+      ["d-car", "Alamo 租车确认单复印件", "carry", "pack"],
+      ["d-insure", "境外旅行保险保单打印件", "carry", "pack"],
+      ["d-insure-pdf", "保险电子保单下载到手机（离线可开）", "carry", "pack"],
+      ["d-addr", "每晚住宿地址 + 电话截图（离线相册）", "carry", "buy"],
+      ["d-pen", "笔", "carry", "pack"],
+      ["d-pouch", "护照包 / 证件包", "carry", "pack"],
+      ["d-card1", "信用卡 1（Visa 或 Mastercard）", "carry", "pack"],
+      ["d-card2", "信用卡 2（另一卡组织）", "carry", "pack", "一张被风控时还能用；酒店和租车会刷授权"],
+      ["d-cash-usd", "美元现金（大面额 $20 / $50）", "carry", "pack"],
+      ["d-ones", "$1 纸币 ×20", "carry", "buy", "小费、代客泊车、房间清洁。只带大钞不好用"],
+      ["d-fives", "$5 纸币 ×10", "carry", "buy"],
+      ["d-cny", "少量人民币（深圳—香港段）", "carry", "pack"],
+      ["d-applepay", "Apple Pay 已开通、卡能刷", "carry", "done", "你已经开过"]
+    ]
+  },
+  {
+    key: "flight",
+    title: "长途飞行（去程 12h / 回程 13h）",
+    note: "上机就穿或放座位袋。回程 10/6 再把这一批掏出来。",
+    items: [
+      ["f-neck", "U 型枕", "carry", "pack"],
+      ["f-eye", "眼罩", "carry", "pack"],
+      ["f-steam", "蒸汽眼罩 ×3", "carry", "pack"],
+      ["f-ear", "耳塞 / 降噪耳机", "carry", "pack"],
+      ["f-mask", "口罩 ×5", "carry", "pack"],
+      ["f-wetmask", "湿口罩 ×3", "carry", "pack"],
+      ["f-comp", "小腿压力袜", "carry", "pack"],
+      ["f-foot", "脚部支撑垫", "carry", "pack"],
+      ["f-slide", "一次性拖鞋（机上换）", "carry", "pack"],
+      ["f-snack", "小零食（坚果 / 饼干）", "carry", "pack"],
+      ["f-bottle", "保温杯（空瓶过安检）", "carry", "pack"],
+      ["f-wipe", "湿巾（随身小包）", "carry", "pack"],
+      ["f-toilet", "湿厕纸（随身）", "carry", "pack"],
+      ["f-jacket", "上机外套（旧金山落地约 13°C、风大）", "carry", "pack"],
+      ["f-spare-u", "换洗内裤 ×1（行李延误保险）", "carry", "pack"],
+      ["f-spare-t", "薄上衣 ×1（行李延误保险）", "carry", "pack"]
+    ]
+  },
+  {
+    key: "clothes",
+    title: "衣服 · 可穿搭单品",
+    note: "按件带，不是按套。不想要的点「不带」。",
+    items: [
+      ["w-white-knit", "白色针织衫", "checked", "pack", "D1 旧金山、D7 车上、D12 回程"],
+      ["w-white-shirt", "白衬衫", "checked", "pack"],
+      ["w-tee", "透气短袖 / T 恤 ×2", "checked", "pack", "D6 拉斯维加斯白天 32°C"],
+      ["w-turtleneck", "白色高领或薄毛衣", "checked", "pack", "D3 红杉，林下阴冷"],
+      ["w-khaki-top", "卡其或驼色长袖", "checked", "pack", "D9 Jeep：浅色娇贵布料会脏到洗不掉"],
+      ["w-hoodie", "卫衣或针织套装上衣", "checked", "pack"],
+      ["w-cami", "白色或浅色吊带", "checked", "pack"],
+      ["w-jean", "直筒牛仔裤", "checked", "pack"],
+      ["w-dark-pant", "深色长裤", "checked", "pack", "D3 红杉"],
+      ["w-wide", "阔腿裤（透气）", "checked", "pack", "D6 白天最热"],
+      ["w-khaki-pant", "卡其长裤", "checked", "pack", "D9 Jeep"],
+      ["w-leggings", "弹力裤", "checked", "pack"],
+      ["w-white-dress", "白 / 米白飘逸长裙（下摆有分量）", "checked", "buy", "D2 一号公路、D8 下羚羊谷、D11 La Jolla。太轻会被吹翻"],
+      ["w-red-dress", "正红连衣裙或正红长裙", "checked", "buy", "D8 纪念碑谷日落、D10 Balboa"],
+      ["w-blue-dress", "宝蓝连衣裙", "checked", "pack", "没有就用正红顶上"],
+      ["w-sm-dress", "浅色短袖连衣裙", "checked", "pack", "D4 圣莫妮卡日落"],
+      ["w-vegas-dress", "缎面或亮片连衣裙 / 小黑裙", "checked", "buy", "只在 D6 拉斯维加斯夜里用一次"],
+      ["w-beverly", "合身连衣裙或西装套装", "checked", "pack", "D5 比弗利。华纳 tour 不要穿这套"],
+      ["w-safety", "防走光安全裤 ×3", "checked", "buy", "D2 悬崖、D8 马蹄湾崖边"],
+      ["w-swim", "泳衣", "checked", "pack", "十月初水凉，不下水就选不带"]
+    ]
+  },
+  {
+    key: "layers",
+    title: "衣服 · 外套与保暖层",
+    note: "全程 4–32°C，靠分层。",
+    items: [
+      ["l-wind", "海军蓝或米白长风衣", "checked", "pack", "D1 旧金山、D2 一号公路风极大"],
+      ["l-down", "亮色长款轻羽绒（正红或米白）", "checked", "buy", "D3 红杉夜 4°C、D8 马蹄湾日出 7°C"],
+      ["l-base", "保暖打底 ×2", "checked", "buy", "红杉看星空必穿"],
+      ["l-denim", "牛仔外套", "checked", "pack"],
+      ["l-cardigan", "针织开衫", "checked", "pack"],
+      ["l-wrap", "薄外搭（披肩式或小西装）", "checked", "pack", "D6 赌场内空调很冷"],
+      ["l-shawl", "米白或驼色大披肩", "checked", "buy", "D9 Jeep 防尘 + 拍照"],
+      ["l-scarf", "大围巾（可当机舱毯子）", "carry", "pack"],
+      ["l-beanie", "毛线帽", "checked", "buy", "红杉看星空、马蹄湾等日出"],
+      ["l-glove", "薄手套", "checked", "buy", "4°C 户外端相机会僵"]
+    ]
+  },
+  {
+    key: "under",
+    title: "内衣、袜子、睡衣",
+    note: "12 天，9/29 洛杉矶休息日洗一次。",
+    items: [
+      ["u-brief", "内裤 ×12", "checked", "pack"],
+      ["u-bra", "内衣 ×5", "checked", "pack"],
+      ["u-sock-crew", "中筒袜 ×6（徒步、红杉、沙漠）", "checked", "pack"],
+      ["u-sock-no", "船袜 / 隐形袜 ×6", "checked", "pack"],
+      ["u-pj-top", "睡衣上衣 ×2", "checked", "pack"],
+      ["u-pj-bot", "睡衣裤 ×2", "checked", "pack"]
+    ]
+  },
+  {
+    key: "shoes",
+    title: "鞋、帽、包、配饰",
+    note: "正经鞋 3 双就够。新鞋现在开始穿开。",
+    items: [
+      ["s-sneaker", "白色运动鞋（已穿开）", "checked", "buy", "下羚羊谷强制包头防滑；Vegas 夜里走 8–10 km"],
+      ["s-hike", "徒步鞋（防滑、包脚）", "checked", "buy", "Moro Rock 台阶、Congress Trail、马蹄湾沙地"],
+      ["s-dress", "粗跟短靴 / 乐福鞋 / 平底", "checked", "pack", "D5 比弗利、D10 Balboa"],
+      ["s-sandal", "平底凉鞋", "checked", "pack", "下羚羊谷不能穿"],
+      ["s-slip", "拖鞋（美国酒店常常不提供）", "checked", "pack"],
+      ["s-hat-chin", "遮阳帽（必须有下巴系绳）", "checked", "buy", "马蹄湾和纪念碑谷普通帽子会被吹走"],
+      ["s-straw", "草帽", "checked", "pack"],
+      ["s-sun", "墨镜", "carry", "buy", "沙漠 4 天 + 海边 3 天"],
+      ["s-buff", "魔术头巾 / Buff", "checked", "buy", "D9 Jeep 2.5 小时敞篷扬尘"],
+      ["s-silk", "丝巾", "checked", "pack"],
+      ["s-gold", "金饰小包", "carry", "pack"],
+      ["s-silver", "银饰 + 绿松石耳环", "carry", "buy", "D7–D9 沙漠段比金饰更搭"],
+      ["s-stud", "耳钉（最小的一副，徒步戴）", "carry", "pack"],
+      ["s-cross", "出门斜挎包（贴身）", "carry", "pack"],
+      ["s-day", "双肩小包（徒步日）", "checked", "pack"],
+      ["s-tote", "帆布包 / 折叠购物袋", "checked", "pack"],
+      ["s-fold", "折叠行李袋", "checked", "pack"],
+      ["s-waist", "防盗腰包", "carry", "pack", "D6 Fremont Street、洛杉矶"],
+      ["s-lanyard", "手机挂绳", "carry", "pack"]
+    ]
+  },
+  {
+    key: "wash",
+    title: "洗漱",
+    note: "正装液体进托运。≤100ml 小样可以随身。",
+    items: [
+      ["h-bag", "洗漱包", "checked", "pack"],
+      ["h-paste", "牙膏", "checked", "pack"],
+      ["h-brush", "牙刷", "checked", "pack"],
+      ["h-floss", "牙线", "checked", "pack"],
+      ["h-rinse", "漱口水小瓶 ≤100ml", "carry", "pack"],
+      ["h-face", "洗面奶（旅行装）", "checked", "pack"],
+      ["h-oil", "卸妆油 / 卸妆水", "checked", "pack"],
+      ["h-cloth", "洗脸巾 ×1 包", "checked", "pack"],
+      ["h-cloth5", "洗脸巾 ×5 张（随身）", "carry", "pack"],
+      ["h-shampoo", "洗发水小瓶", "checked", "pack"],
+      ["h-cond", "护发素小瓶", "checked", "pack"],
+      ["h-body", "沐浴露小瓶", "checked", "pack"],
+      ["h-comb", "梳子", "checked", "pack"],
+      ["h-clip", "刘海夹", "checked", "pack"],
+      ["h-tie", "发圈 ×10", "checked", "pack"],
+      ["h-pin", "发夹一盒", "checked", "pack"],
+      ["h-spray", "定型喷雾 / 发胶 ≤100ml", "carry", "buy", "12 天里有 8 天大风"],
+      ["h-towel", "速干浴巾", "checked", "pack"],
+      ["h-nail", "指甲剪（不能随身）", "checked", "pack"],
+      ["h-tweeze", "镊子", "checked", "pack"]
+    ]
+  },
+  {
+    key: "skin",
+    title: "护肤、防晒、化妆、眼睛",
+    note: "沙漠四天极干。沙尘天隐形建议改框架。",
+    items: [
+      ["k-water", "化妆水 / 爽肤水", "checked", "pack"],
+      ["k-milk", "乳液", "checked", "pack"],
+      ["k-serum", "精华", "checked", "pack"],
+      ["k-cream", "面霜（含旅行小样 ×1 随身）", "checked", "pack"],
+      ["k-mask", "面膜 ×5", "checked", "pack"],
+      ["k-mist", "保湿喷雾小瓶", "carry", "pack"],
+      ["k-lip", "润唇膏", "carry", "buy", "沙漠段嘴唇开裂最常见"],
+      ["k-lipspf", "防晒唇膏", "carry", "buy"],
+      ["k-hand", "护手霜", "carry", "buy"],
+      ["k-bodylotion", "身体乳", "checked", "buy", "拉斯维加斯到纪念碑谷连续 4 天极干"],
+      ["k-spf-face", "面部防晒霜", "checked", "pack"],
+      ["k-spf-body", "身体防晒霜", "checked", "pack"],
+      ["k-aftersun", "晒后修复 / 芦荟胶", "checked", "buy"],
+      ["k-found", "粉底", "checked", "pack"],
+      ["k-brow", "眉笔", "checked", "pack"],
+      ["k-mascara", "睫毛膏", "checked", "pack"],
+      ["k-lipcolor", "口红 / 唇釉 ×2", "checked", "pack"],
+      ["k-brush", "化妆刷 / 粉扑", "checked", "pack"],
+      ["k-makeupbag", "化妆包", "checked", "pack"],
+      ["k-mini", "随身迷你化妆包", "carry", "pack"],
+      ["k-lens", "隐形眼镜 ×10 副", "checked", "pack"],
+      ["k-case", "隐形盒", "checked", "pack"],
+      ["k-sol", "护理液", "checked", "pack"],
+      ["k-eyedrop", "眼药水", "carry", "pack"],
+      ["k-glasses", "框架眼镜", "carry", "buy", "D8 羚羊谷、D9 Jeep 沙尘建议改戴框架"]
+    ]
+  },
+  {
+    key: "meds",
+    title: "药品（你自己小份）",
+    note: "大药包是陈坛辉的。倒时差那晚你包里要有自己的份。",
+    items: [
+      ["m-bag", "小药盒 / 拉链袋", "carry", "pack"],
+      ["m-mel", "褪黑素", "carry", "pack"],
+      ["m-ibu", "布洛芬 / 止痛药", "carry", "pack"],
+      ["m-cold", "感冒药（小份）", "carry", "pack"],
+      ["m-stomach", "肠胃药（消化、止泻）", "carry", "pack"],
+      ["m-motion", "晕车贴 / 晕车药", "carry", "pack", "山路自驾 + Jeep"],
+      ["m-band", "创可贴", "carry", "pack"],
+      ["m-blister", "防磨脚贴", "carry", "pack"],
+      ["m-alcohol", "酒精棉签", "checked", "pack"],
+      ["m-electro", "电解质泡腾片", "checked", "buy", "沙漠脱水比中暑更常见"],
+      ["m-rx", "处方药（如有）+ 原包装", "carry", "pack"],
+      ["m-pad", "卫生巾 / 卫生棉条（按周期多备）", "checked", "pack"]
+    ]
+  },
+  {
+    key: "tech",
+    title: "电子设备与充电",
+    note: "锂电池只能随身。转换插头陈坛辉会带，你自己要充电就再备一个。",
+    items: [
+      ["t-phone", "手机", "carry", "pack"],
+      ["t-cable", "手机充电线 ×2", "carry", "pack"],
+      ["t-brick", "充电头 / 快充头", "carry", "pack"],
+      ["t-bank", "充电宝", "carry", "pack", "托运会被开箱取出"],
+      ["t-us", "美标转换插头（Type A/B）", "carry", "skip", "陈坛辉会带。你想自己有一份就改回待装箱"],
+      ["t-watch", "手表及充电线（如戴）", "carry", "pack"],
+      ["t-pods", "耳机", "carry", "pack"],
+      ["t-clipper", "Clipper App 已安装并绑卡", "carry", "buy", "叮叮车日票落地再买"],
+      ["t-map", "离线地图：旧金山、红杉、佩吉、纪念碑谷、洛杉矶、圣迭戈", "carry", "buy"],
+      ["t-airtag", "Airtag（放托运箱）", "checked", "pack"],
+      ["t-lock", "TSA 海关锁", "checked", "pack"],
+      ["t-zip", "拉链八字锁扣", "checked", "pack"]
+    ]
+  },
+  {
+    key: "misc",
+    title: "日用杂物",
+    note: "中途洗衣决定了衣服能不能只带这些。最合适的洗衣日是 9/29 洛杉矶。",
+    items: [
+      ["x-umbrella", "折叠雨伞（兼遮阳）", "checked", "pack", "美西自驾路上很晒，遮阳比防雨更常用"],
+      ["x-tissue", "包装纸巾 ×3", "checked", "pack"],
+      ["x-wet", "湿纸巾 1–2 包", "checked", "pack"],
+      ["x-disinfect", "消毒湿巾", "checked", "pack"],
+      ["x-ziploc-s", "密封袋 小号 ×10", "checked", "buy"],
+      ["x-ziploc-m", "密封袋 中号 ×10", "checked", "buy"],
+      ["x-laundry", "洗衣凝珠 6 颗", "checked", "buy", "12 天 8 套衣服靠中途洗一次"],
+      ["x-lbag", "脏衣袋", "checked", "pack"],
+      ["x-compress", "压缩袋", "checked", "buy", "羽绒和裙子压下去能省一层箱子"],
+      ["x-stain", "去渍笔", "checked", "buy"],
+      ["x-n95", "N95 ×3（Jeep 那天）", "checked", "pack"],
+      ["x-instant", "即食麦片 / 小面包（酒店没早饭那天）", "carry", "buy"],
+      ["x-noodle", "泡面 2–3 包（备用，不是主食）", "checked", "buy"]
+    ]
+  },
+  {
+    key: "car",
+    title: "车上常备（9/25 取车 – 10/3 还车）",
+    note: "放后备箱，下车即取。10/3 还车前全部掏出来。",
+    items: [
+      ["v-mount", "车载手机支架", "car", "buy", "8 地方自驾、单日最长约 6 小时"],
+      ["v-carcharge", "多口车充 + 线（有的租车只有点烟器）", "car", "buy"],
+      ["v-visor", "车遮阳帘", "car", "buy", "美西白天路晒，后排和挡风玻璃都有用"],
+      ["v-lamp", "头灯（含电池或已充电）", "car", "buy", "Moro Rock 摸黑下台阶、马蹄湾 6:22 日出"],
+      ["v-flash", "手电（备用）", "car", "buy"],
+      ["v-blanket", "薄毯", "car", "pack", "看星空、等日出都要在低温里久坐"],
+      ["v-change", "车上换装袋", "car", "pack", "D4 单日从 6°C 到 28°C"],
+      ["v-water", "大瓶水（落地超市买）", "car", "buy"],
+      ["v-snack", "车上零食（落地超市买）", "car", "buy"],
+      ["v-trash", "车用垃圾袋", "car", "buy"],
+      ["v-wipe", "车用湿巾", "car", "buy"]
+    ]
+  }
+];
+
+const DEFAULTS = {};
+GROUPS.forEach((g) => g.items.forEach((it) => {
+  DEFAULTS[it[0]] = { state: it[3], custom: false };
+}));
+
+function load() {
+  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; }
+  catch { return { ...DEFAULTS }; }
+}
+function save(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
+
+let store = load();
+let filter = "open";
+let bag = "all";
+let query = "";
+
+const filtersEl = document.getElementById("filters");
+const bagsEl = document.getElementById("bags");
+const app = document.getElementById("app");
+
+function chips() {
+  const fs = [
+    ["open", "未完成"],
+    ["buy", "待采购"],
+    ["all", "全部"],
+    ["done", "已打勾"],
+    ["skip", "不带"]
+  ];
+  filtersEl.innerHTML = fs.map(([k, l]) =>
+    `<button class="chip ${filter===k?"on":""}" data-f="${k}">${l}</button>`
+  ).join("");
+  bagsEl.innerHTML = [["all","全部位置"],["carry","随身"],["checked","托运"],["car","车上"]]
+    .map(([k,l]) => `<button class="bag ${bag===k?"on":""}" data-b="${k}">${l}</button>`).join("");
+}
+
+function allItems() {
+  const extra = Object.entries(store).filter(([id, v]) => v.custom).map(([id, v]) => ({
+    id, name: v.name, bag: v.bag, init: "pack", why: "", group: "custom"
+  }));
+  const base = GROUPS.flatMap((g) => g.items.map((it) => ({
+    id: it[0], name: it[1], bag: it[2], init: it[3], why: it[4] || "", group: g.key
+  })));
+  return base.concat(extra);
+}
+
+function visible(item) {
+  const st = (store[item.id] || {}).state || item.init;
+  if (bag !== "all" && item.bag !== bag) return false;
+  if (query && !item.name.toLowerCase().includes(query) && !(item.why||"").toLowerCase().includes(query)) return false;
+  if (filter === "all") return true;
+  if (filter === "open") return st === "buy" || st === "pack";
+  return st === filter;
+}
+
+function setState(id, state) {
+  store[id] = { ...(store[id] || {}), state };
+  save(store);
+  render();
+}
+
+function toggleDone(item) {
+  const st = (store[item.id] || {}).state || item.init;
+  if (st === "done") setState(item.id, item.init === "done" ? "pack" : (item.init === "skip" ? "pack" : item.init));
+  else if (st === "skip") setState(item.id, "done");
+  else setState(item.id, "done");
+}
+
+function render() {
+  chips();
+  const items = allItems();
+  const counts = { all: 0, buy: 0, pack: 0, done: 0, skip: 0 };
+  items.forEach((it) => {
+    const st = (store[it.id] || {}).state || it.init;
+    counts[st] = (counts[st] || 0) + 1;
+    counts.all++;
+  });
+  document.getElementById("nAll").textContent = counts.all;
+  document.getElementById("nBuy").textContent = counts.buy;
+  document.getElementById("nOpen").textContent = counts.buy + counts.pack;
+  document.getElementById("nDone").textContent = counts.done;
+  const denom = Math.max(1, counts.all - counts.skip);
+  document.getElementById("bar").style.width = Math.round(counts.done / denom * 100) + "%";
+
+  const customGroup = {
+    key: "custom",
+    title: "我自己加的",
+    note: "从下面输入框加进来的。",
+    items: items.filter((it) => it.group === "custom").map((it) => [it.id, it.name, it.bag, "pack", ""])
+  };
+  const groups = GROUPS.concat(customGroup.items.length ? [customGroup] : []);
+
+  app.innerHTML = groups.map((g) => {
+    const mapped = g.items.map((it) => ({
+      id: it[0], name: it[1], bag: it[2], init: it[3], why: it[4] || "", group: g.key
+    })).filter(visible);
+    if (!mapped.length) return "";
+    const done = mapped.filter((it) => ((store[it.id]||{}).state || it.init) === "done").length;
+    return `<section class="group">
+      <button class="group-h" data-toggle="${g.key}">
+        <div>
+          <h2>${g.title}</h2>
+          <small>${g.note}</small>
+        </div>
+        <div class="count">${done}/${mapped.length}</div>
+      </button>
+      <div class="items" id="g-${g.key}">
+        ${mapped.map((it) => {
+          const st = (store[it.id] || {}).state || it.init;
+          return `<div class="item ${st}" data-done="${it.id}">
+            <div class="check">${st==="done"?"✓":""}</div>
+            <div>
+              <div class="name">${it.name}</div>
+              ${it.why ? `<div class="why">${it.why}</div>` : ""}
+              <div class="tags">
+                <span class="tag ${it.bag==="car"?"car":""}">${BAG[it.bag]}</span>
+                <span class="tag ${st}">${STATE[st]}</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="mini ${st==="buy"?"on-buy":""}" data-buy="${it.id}">待采购</button>
+              <button class="mini ${st==="skip"?"on-skip":""}" data-skip="${it.id}">不带</button>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </section>`;
+  }).join("");
+}
+
+filtersEl.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-f]");
+  if (!b) return;
+  filter = b.dataset.f;
+  render();
+});
+bagsEl.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-b]");
+  if (!b) return;
+  bag = b.dataset.b;
+  render();
+});
+document.getElementById("q").addEventListener("input", (e) => {
+  query = e.target.value.trim().toLowerCase();
+  render();
+});
+app.addEventListener("click", (e) => {
+  const buy = e.target.closest("[data-buy]");
+  const skip = e.target.closest("[data-skip]");
+  const row = e.target.closest("[data-done]");
+  if (buy) {
+    const id = buy.dataset.buy;
+    const st = (store[id] || {}).state;
+    setState(id, st === "buy" ? "pack" : "buy");
+    return;
+  }
+  if (skip) {
+    const id = skip.dataset.skip;
+    const st = (store[id] || {}).state;
+    setState(id, st === "skip" ? "pack" : "skip");
+    return;
+  }
+  if (row) {
+    const item = allItems().find((x) => x.id === row.dataset.done);
+    if (item) toggleDone(item);
+  }
+});
+document.getElementById("addBtn").addEventListener("click", () => {
+  const name = document.getElementById("newName").value.trim();
+  if (!name) return;
+  const id = "c-" + Date.now();
+  store[id] = { state: "pack", custom: true, name, bag: document.getElementById("newBag").value };
+  save(store);
+  document.getElementById("newName").value = "";
+  filter = "open";
+  render();
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("会清掉所有勾选和自己加的项，确定？")) return;
+  store = { ...DEFAULTS };
+  save(store);
+  render();
+});
+render();
+</script>
+</body>
+</html>
